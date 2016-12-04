@@ -1,0 +1,151 @@
+{
+    "author": "Jennifer Neff",
+    "dependencies": {
+        "enamel": "^1.2.4",
+        "pdc-transform": "^1.0.3",
+        "pebble-clay": "^1.0.3"
+    },
+    "keywords": [],
+    "name": "arc-diem",
+    "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
+        "displayName": "Arc Diem",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "DayStart",
+            "DayEnd",
+            "BatteryStatus",
+            "BluetoothStatus",
+            "BluetoothDisconnect",
+            "BluetoothConnect"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "fonts/Eczar-SemiBold-Medium.ttf",
+                    "name": "FONT_ECZAR_SEMIBOLD_MEDIUM_25",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/Eczar-SemiBold-Large.ttf",
+                    "name": "FONT_ECZAR_SEMIBOLD_LARGE_44",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "file": "images/menu_icon.png",
+                    "menuIcon": true,
+                    "name": "IMAGE_MENU_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bluetooth_off_dark.png",
+                    "name": "IMAGE_BLUETOOTH_OFF_DARK",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bluetooth_off.png",
+                    "name": "IMAGE_BLUETOOTH_OFF",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bluetooth_on_dark.png",
+                    "name": "IMAGE_BLUETOOTH_ON_DARK",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bluetooth_on.png",
+                    "name": "IMAGE_BLUETOOTH_ON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bluetooth_dark.png",
+                    "name": "IMAGE_BLUETOOTH_DARK",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/black_with_gradient_background.png",
+                    "name": "IMAGE_NIGHT_ON_BLACK",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/batteryplus_dark.png",
+                    "name": "IMAGE_BATTERY_ICON_PLUS_DARK",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/battery_dark.png",
+                    "name": "IMAGE_BATTERY_ICON_DARK",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/battery.png",
+                    "name": "IMAGE_BATTERY_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bluetooth.png",
+                    "name": "IMAGE_BLUETOOTH",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/batteryplus.png",
+                    "name": "IMAGE_BATTERY_ICON_PLUS",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/white_with_gradient_background.png",
+                    "name": "IMAGE_DAY_ON_WHITE",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/daytime_hand.png",
+                    "memoryFormat": "Smallest",
+                    "name": "IMAGE_DAYTIME_HAND",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "fonts/Eczar-SemiBold-Small.ttf",
+                    "name": "FONT_ECZAR_SEMIBOLD_SMALL_18",
+                    "targetPlatforms": null,
+                    "type": "font"
+                },
+                {
+                    "file": "fonts/Eczar-SemiBold.ttf",
+                    "name": "FONT_ECZAR_SEMIBOLD_32",
+                    "targetPlatforms": null,
+                    "type": "font"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "diorite"
+        ],
+        "uuid": "79001535-2fec-4a6d-90a5-2cf720feca4d",
+        "watchapp": {
+            "watchface": true
+        }
+    },
+    "version": "1.0.0"
+}

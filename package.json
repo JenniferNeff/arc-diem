@@ -116,13 +116,6 @@
                     "type": "bitmap"
                 },
                 {
-                    "file": "images/daytime_hand.png",
-                    "memoryFormat": "Smallest",
-                    "name": "IMAGE_DAYTIME_HAND",
-                    "targetPlatforms": null,
-                    "type": "bitmap"
-                },
-                {
                     "file": "fonts/Eczar-SemiBold-Small.ttf",
                     "name": "FONT_ECZAR_SEMIBOLD_SMALL_18",
                     "targetPlatforms": null,
@@ -140,6 +133,7 @@
         "targetPlatforms": [
             "aplite",
             "basalt",
+            "chalk",
             "diorite"
         ],
         "uuid": "79001535-2fec-4a6d-90a5-2cf720feca4d",
@@ -147,5 +141,5 @@
             "watchface": true
         }
     },
-    "version": "1.0.0"
+    "version": "1.1.0"
 }

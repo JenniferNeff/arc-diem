@@ -128,7 +128,7 @@ static void update_time() {
   
   // Write the current day and month into a buffer
   static char dd_buffer[16];
-  strftime(dd_buffer, sizeof(dd_buffer), "%A", tick_time);
+  strftime(dd_buffer, sizeof(dd_buffer), PBL_IF_ROUND_ELSE("%a", "%A"), tick_time);
   
   static char m_buffer[16];
   strftime(m_buffer, sizeof(m_buffer), "%b ", tick_time);
@@ -174,12 +174,19 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   // Special Thanks To https://forums.pebble.com/t/watchface-graphic-stops-drawing-after-watchface-loaded-for-a-while/18982
   // Custom drawing happens here!
   GRect bounds = layer_get_bounds(layer);
+  #if defined(PBL_ROUND)
+  GRect dial_hand_bounds = GRect(2, 2, bounds.size.w - 4, bounds.size.h - 4);
+  GRect dial_trim_bounds = GRect(12, 12, bounds.size.w - 24, bounds.size.h - 24);
+  GRect center_line_bounds = GRect(bounds.size.w/4, bounds.size.w/4, bounds.size.w/2, bounds.size.w/2);
+  GPoint center = GPoint(bounds.size.w/2, bounds.size.h/2);
+  #else
   //GRect dial_bounds = GRect(0, bounds.size.h - bounds.size.w/2, bounds.size.w, bounds.size.w);
   GRect dial_hand_bounds = GRect(2, bounds.size.h - bounds.size.w/2 + 2, bounds.size.w - 4, bounds.size.w - 4);
   GRect dial_trim_bounds = GRect(12, bounds.size.h - bounds.size.w/2 + 12, bounds.size.w - 24, bounds.size.w - 24);
   GRect center_line_bounds = GRect(bounds.size.w/4, bounds.size.h - bounds.size.w/4, bounds.size.w/2, bounds.size.w/2);
   GPoint center = GPoint(bounds.size.w/2, bounds.size.h);
   //uint16_t radius = bounds.size.w/2;
+  #endif
   
   // Draw rectangles to test
   //graphics_draw_rect(ctx, dial_bounds);
@@ -210,7 +217,7 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
   
   const GPathInfo BOLT_PATH_INFO = {
     .num_points = 5,
-    .points = (GPoint[]) {{bounds.size.w/2, bounds.size.h}, hour_hand_end, hour_hand_left, hour_hand_end, hour_hand_right}
+    .points = (GPoint[]) {center, hour_hand_end, hour_hand_left, hour_hand_end, hour_hand_right}
   };
   hour_hand = gpath_create(&BOLT_PATH_INFO);
   gpath_draw_outline_open(ctx, hour_hand);
@@ -226,11 +233,12 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
     gpath_move_to(inner_sun, GPoint(center_of_sun.x - sun_offset, center_of_sun.y - sun_offset));
     gpath_move_to(outer_sun, GPoint(center_of_sun.x - sun_offset, center_of_sun.y - sun_offset));
   
-    graphics_context_set_fill_color(ctx, foreground_color);
+    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(foreground_color, foreground_color));
+    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(foreground_color, foreground_color));
     gpath_draw_filled(ctx, inner_sun);
     gpath_draw_outline(ctx, inner_sun);
-    graphics_context_set_fill_color(ctx, background_color);
-    graphics_context_set_stroke_color(ctx, foreground_color);
+    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorChromeYellow, background_color));
+    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(foreground_color, foreground_color));
     gpath_draw_filled(ctx, outer_sun);
     gpath_draw_outline(ctx, outer_sun);
     
@@ -238,16 +246,16 @@ static void canvas_update_proc(Layer *layer, GContext *ctx) {
     gpath_destroy(outer_sun);
   
     GRect mid_sun = GRect(center_of_sun.x - small_sun_radius, center_of_sun.y - small_sun_radius, small_sun_radius*2, small_sun_radius*2);
-    graphics_context_set_fill_color(ctx, foreground_color);
+    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(foreground_color, foreground_color));
     graphics_fill_radial(ctx, mid_sun, GOvalScaleModeFitCircle, 3, 0, DEG_TO_TRIGANGLE(360));
     
   } else { // draw the moon on the hour hand - https://www.xkcd.com/1738/ is acknowledged
-    graphics_context_set_fill_color(ctx, foreground_color);
-    graphics_context_set_stroke_color(ctx, foreground_color);
+    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, foreground_color));
+    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorLightGray, foreground_color));
     graphics_fill_circle(ctx, center_of_sun, moon_outer_radius);
     graphics_draw_circle(ctx, center_of_sun, moon_outer_radius);
-    graphics_context_set_fill_color(ctx, background_color);
-    graphics_context_set_stroke_color(ctx, background_color);
+    graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorOxfordBlue, background_color));
+    graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorOxfordBlue, background_color));
     graphics_fill_circle(ctx, gpoint_from_polar(center_line_bounds, GOvalScaleModeFitCircle, hour_angle + 2200), moon_inner_radius);
     graphics_draw_circle(ctx, gpoint_from_polar(center_line_bounds, GOvalScaleModeFitCircle, hour_angle + 2200), moon_inner_radius);
   }
@@ -258,19 +266,55 @@ static void battery_update_proc(Layer *layer, GContext *ctx) {
   
   if (strcmp(enamel_get_BatteryStatus(), "yes") == 0 || (strcmp(enamel_get_BatteryStatus(), "low") == 0 && (s_battery_level < 30 || s_battery_charging))) {
     
+    GColor battery_color;
+    
+    #if defined(PBL_COLOR)
+    if (s_battery_level > 30) {
+      battery_color = GColorKellyGreen;
+    } else if (s_battery_level > 10) {
+      battery_color = GColorChromeYellow;
+    } else {
+      battery_color = GColorDarkCandyAppleRed;
+    }
+    #else
+      battery_color = background_color;
+    #endif
+    
+    #if defined(PBL_ROUND)
+    // On round watches, the battery bar is a quarter-circle along the bottom edge
+    GRect bounds = layer_get_bounds(layer);
+    GRect back_of_bar = GRect(1, 1, bounds.size.w - 2, bounds.size.h - 2);
+    GRect front_of_bar = GRect(3, 3, bounds.size.w - 6, bounds.size.h - 6);
+    
+    // Find the width of the bar
+    int width = (int)(float)(((float)s_battery_level / 100.0F) * (90.0F));
+    
+    // Draw the background
+    graphics_context_set_fill_color(ctx, foreground_color);
+    graphics_fill_radial(ctx, back_of_bar, GOvalScaleModeFitCircle, 8, DEG_TO_TRIGANGLE(133), DEG_TO_TRIGANGLE(227));
+    
+    // Draw the bar
+    graphics_context_set_fill_color(ctx, battery_color);
+    //APP_LOG(APP_LOG_LEVEL_ERROR, "Battery level: %d", s_battery_level);
+    graphics_fill_radial(ctx, front_of_bar, GOvalScaleModeFitCircle, 4, DEG_TO_TRIGANGLE(225 - width), DEG_TO_TRIGANGLE(225));
+    // Not sure what's going on there - possibly the emulator always assumes standard Pebble battery capacity
+    
+    #else
+    // On rectangular watches, the battery bar runs straight along the top edge
     GRect bounds = layer_get_bounds(layer);
     GRect back_of_bar = GRect(25, 1, bounds.size.w - 50, 8);
   
     // Find the width of the bar
-    int width = (int)(float)(((float)s_battery_level / 100.0F) * 90.0F);
+    int width = (int)(float)(((float)s_battery_level / 100.0F) * (back_of_bar.size.w - 4.0F));
 
     // Draw the background
     graphics_context_set_fill_color(ctx, foreground_color);
     graphics_fill_rect(ctx, back_of_bar, 0, GCornerNone);
 
     // Draw the bar
-    graphics_context_set_fill_color(ctx, background_color);
+    graphics_context_set_fill_color(ctx, battery_color);
     graphics_fill_rect(ctx, GRect(27, 3, width, 4), 0, GCornerNone);
+    #endif
     
     if (s_battery_charging) {
       bitmap_layer_set_bitmap(s_battery_icon_layer, daytime ? s_battery_icon_plus : s_battery_icon_plus_dark);
@@ -344,10 +388,28 @@ static void main_window_load(Window *window) {
   // Create canvas layer
   s_canvas_layer = layer_create(bounds);
   
+  int offset = bounds.size.w == 144 ? 50 : 70;
+  #if defined(PBL_ROUND)
+  // Create the time TextLayer with specific bounds
+  s_time_layer = text_layer_create(
+      clock_is_24h_style() ? GRect(0, bounds.size.h*(13.0/21), bounds.size.w, 50) : GRect(0, bounds.size.h*(13.0/21), bounds.size.w-70, 50));
+  
+  // Create the day and date TextLayer with specific bounds
+  s_day_layer = text_layer_create(
+      GRect(0, bounds.size.h*(44.0/84), bounds.size.w/2, 35));
+  
+  s_date_layer = text_layer_create(
+      GRect(bounds.size.w/2, bounds.size.h*(44.0/84), bounds.size.w/2, 35));
+  
+  // Create AM/PM layer
+  s_pm_layer = text_layer_create(
+      GRect(bounds.size.w - 66, bounds.size.h*(13.0/21) + 13, 30, 25));
+  
+  #else
   // Create the time TextLayer with specific bounds
   s_time_layer = text_layer_create(
       //clock_is_24h_style() ? GRect(0, 48, bounds.size.w, 50) : GRect(0, 48, bounds.size.w-50, 50));
-      clock_is_24h_style() ? GRect(0, bounds.size.h*(6.0/21), bounds.size.w, 50) : GRect(0, bounds.size.h*(6.0/21), bounds.size.w-50, 50));
+      clock_is_24h_style() ? GRect(0, bounds.size.h*(6.0/21), bounds.size.w, 50) : GRect(0, bounds.size.h*(6.0/21), bounds.size.w-offset, 70));
   
   // Create the day and date TextLayer with specific bounds
   s_day_layer = text_layer_create(
@@ -358,7 +420,8 @@ static void main_window_load(Window *window) {
   
   // Create AM/PM layer
   s_pm_layer = text_layer_create(
-      GRect(bounds.size.w - 46, bounds.size.h*(6.0/21) + 13, 30, 25));
+      GRect(bounds.size.w - (offset - 4), bounds.size.h*(6.0/21) + 13, 40, 35));
+  #endif
   
   // Create GFont
   #if PBL_DISPLAY_WIDTH == 200
@@ -403,7 +466,7 @@ static void main_window_load(Window *window) {
   layer_add_child(window_layer, text_layer_get_layer(s_pm_layer));
 
   // Create battery meter Layer
-  s_battery_layer = layer_create(GRect(0, 0, bounds.size.w, bounds.size.h/4));
+  s_battery_layer = layer_create(GRect(0, 0, bounds.size.w, PBL_IF_ROUND_ELSE(bounds.size.h, bounds.size.h/4)));
   layer_set_update_proc(s_battery_layer, battery_update_proc);
 
   // Add to Window
@@ -416,7 +479,7 @@ static void main_window_load(Window *window) {
   s_battery_icon_plus_dark = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BATTERY_ICON_PLUS_DARK);
   
   // Create the BitmapLayer to display the battery icon
-  s_battery_icon_layer = bitmap_layer_create(GRect(0, 0, 21, 9));
+  s_battery_icon_layer = bitmap_layer_create(PBL_IF_ROUND_ELSE(GRect(65, 150, 21, 9), GRect(0, 0, 21, 9)));
   bitmap_layer_set_bitmap(s_battery_icon_layer, s_battery_icon);
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_battery_icon_layer));
   
@@ -428,9 +491,10 @@ static void main_window_load(Window *window) {
   s_bt_icon_off_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH_OFF);
   s_bt_icon_off_bitmap_dark = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BLUETOOTH_OFF_DARK);
 
-  // Create the BitmapLayer to display the GBitmap
-  s_bt_layer = layer_create(GRect(122, 4, 18, 18));
-  s_bt_icon_layer = bitmap_layer_create(GRect(122, 4, 18, 18));
+  // Create the BitmapLayer to display the Bluetooth icon GBitmap
+  //s_bt_layer = layer_create(GRect(bounds.size.w - 22, 4, 18, 18));
+  s_bt_layer = layer_create(PBL_IF_ROUND_ELSE(GRect(95, 145, 18, 18), GRect(bounds.size.w - 22, 4, 18, 18)));
+  s_bt_icon_layer = bitmap_layer_create(PBL_IF_ROUND_ELSE(GRect(95, 147, 18, 18), GRect(bounds.size.w - 22, 4, 18, 18)));
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(s_bt_icon_layer));
   }
 
